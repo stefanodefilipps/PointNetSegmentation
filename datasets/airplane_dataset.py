@@ -118,7 +118,7 @@ def _sample_airplane_surface(
     right_wing_points = sample_wing('right', n_wing_right)
     left_wing_points = sample_wing('left', n_wing_left)
 
-    right_labels = np.full(n_wing_right, 2, dtype=np.int64)  # class 2
+    right_labels = np.full(n_wing_right, 1, dtype=np.int64)  # class 1
     left_labels  = np.full(n_wing_left, 1, dtype=np.int64)   # class 1
 
     points_list.extend([left_wing_points, right_wing_points])
@@ -137,7 +137,7 @@ def _sample_airplane_surface(
     z_tail_pts = np.full(num_tailplane_points, z_tail)
 
     tailplane_points = np.stack([x_tail_pts, y_tail_pts, z_tail_pts], axis=1)
-    tailplane_labels = np.full(num_tailplane_points, 3, dtype=np.int64)  # class 3
+    tailplane_labels = np.full(num_tailplane_points, 2, dtype=np.int64)  # class 2
 
     points_list.append(tailplane_points)
     labels_list.append(tailplane_labels)
@@ -155,7 +155,7 @@ def _sample_airplane_surface(
     y_fin_pts = np.full(num_fin_points, y_fin)
 
     fin_points = np.stack([x_fin_pts, y_fin_pts, z_fin_pts], axis=1)
-    fin_labels = np.full(num_fin_points, 4, dtype=np.int64)  # class 4
+    fin_labels = np.full(num_fin_points, 3, dtype=np.int64)  # class 3
 
     points_list.append(fin_points)
     labels_list.append(fin_labels)
@@ -208,6 +208,7 @@ class AirplaneSurfaceDataset(Dataset):
         add_noise=True,
         noise_sigma=0.005,
         random_rotation=False,
+        preprocess=False,
     ):
         super().__init__()
         self.num_samples = num_samples
@@ -227,6 +228,7 @@ class AirplaneSurfaceDataset(Dataset):
         ])
         self.num_classes = 5
         self.random_rotation = random_rotation
+        self.preprocess_flag = preprocess
 
     def preprocess(self, points):
         # points: (3, N)
@@ -255,7 +257,8 @@ class AirplaneSurfaceDataset(Dataset):
             random_rotation=self.random_rotation,
         )
 
-        pts_np = self.preprocess(pts_np)  # (N, 3)
+        if self.preprocess_flag:
+            pts_np = self.preprocess(pts_np)  # (N, 3)
 
         pts = torch.from_numpy(pts_np).transpose(0, 1)  # (3, N)
         labels = torch.from_numpy(labels_np)            # (N,)
@@ -279,6 +282,7 @@ class PrecomputedAirplaneSurfaceDataset(Dataset):
         noise_sigma=0.005,
         random_rotation=False,
         seed: int | None = None,
+        preprocess=False,
     ):
         """
         Precompute a fixed set of synthetic airplanes.
@@ -296,7 +300,8 @@ class PrecomputedAirplaneSurfaceDataset(Dataset):
             [1.0, 0.0, 1.0],  # 4: +Z -> magenta
             [0.0, 1.0, 1.0],  # 5: -Z -> cyan
         ])
-        self.num_classes = 5
+        self.num_classes = 4
+        self.preprocess_flag = preprocess
 
         # optional: make generation reproducible
         rng_state = None
@@ -319,7 +324,8 @@ class PrecomputedAirplaneSurfaceDataset(Dataset):
             )
             # pts_np: (N, 3), labels_np: (N,)
 
-            pts_np = self.preprocess(pts_np)  # (N, 3)
+            if self.preprocess_flag:
+                pts_np = self.preprocess(pts_np)  # (N, 3)
 
             pts = torch.from_numpy(pts_np).transpose(0, 1)  # (3, N)
             labels = torch.from_numpy(labels_np)            # (N,)
