@@ -1,13 +1,13 @@
 import torch
 from datasets.airplane_dataset import AirplaneSurfaceDataset
-from segmentation_models._plots import plot_gt_vs_pred
+from segmentation_models._plots import overlay_pointnet_transforms, plot_gt_vs_pred, visualize_pointnet_transforms
 from segmentation_models.pointnet import PointNetSegmentation
 from training.trainer import evaluate
 from torch.utils.data import DataLoader
 
 
 
-val_dataset   = AirplaneSurfaceDataset(num_samples=500)
+val_dataset   = AirplaneSurfaceDataset(num_samples=500, random_rotation=False)
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -38,3 +38,12 @@ plot_gt_vs_pred(
     dataset=val_dataset,
     idx=0
 )  # Optional: visualize predictions before training
+
+# say you want to use the validation set of airplanes / cubes / cones
+overlay_pointnet_transforms(
+    model=model,
+    dataset=val_dataset,
+    device=device,
+    num_examples=2,     # how many shapes to overlay
+    # indices=[0, 10, 20, 30, 40],  # optional: choose which ones
+)
