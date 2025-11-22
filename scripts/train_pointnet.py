@@ -2,6 +2,7 @@
 import torch
 from torch.utils.data import DataLoader
 
+from datasets.airplane_dataset import PrecomputedAirplaneSurfaceDataset
 from segmentation_models import PointNetSegmentation
 from datasets import AirplaneSurfaceDataset
 from segmentation_models._plots import plot_gt_vs_pred
@@ -10,8 +11,8 @@ from training.trainer import evaluate, fit
 def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    train_dataset = AirplaneSurfaceDataset(num_samples=4000, random_rotation=True)
-    val_dataset   = AirplaneSurfaceDataset(num_samples=500, random_rotation=True)
+    train_dataset = PrecomputedAirplaneSurfaceDataset(num_samples=4000, random_rotation=True)
+    val_dataset   = PrecomputedAirplaneSurfaceDataset(num_samples=500, random_rotation=True)
 
     train_dataset.view_sample(0)  # Optional: visualize a sample
     plot_gt_vs_pred(
@@ -44,7 +45,7 @@ def main():
         device=device,
         num_epochs=100,
         checkpoint_path="checkpoints/best_model_pointnet_airplanes.pt",
-        es_min_delta=1e-4
+        es_min_delta=0.0
     )
 
     plot_gt_vs_pred(

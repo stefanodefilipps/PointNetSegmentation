@@ -94,6 +94,7 @@ def fit(
             if improved:
                 best_val_loss = val_history["loss"]
                 best_epoch = epoch
+                epochs_no_improve = 0
 
                 state = {
                     "epoch": epoch,

@@ -21,7 +21,7 @@ best_val_loss = checkpoint["best_val_loss"]
 model.to(device)
 model.eval()
 
-val_loader   = DataLoader(val_dataset, batch_size=16, shuffle=False)
+val_loader   = DataLoader(val_dataset, batch_size=16, shuffle=False)    
 
 evaluate(
     model,

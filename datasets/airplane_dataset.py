@@ -228,6 +228,19 @@ class AirplaneSurfaceDataset(Dataset):
         self.num_classes = 5
         self.random_rotation = random_rotation
 
+    def preprocess(self, points):
+        # points: (3, N)
+
+        # 1. center
+        centroid = points.mean(axis=1, keepdims=True)
+        points = points - centroid
+
+        # 2. scale to unit sphere
+        scale = np.max(np.linalg.norm(points, axis=0))
+        points = points / scale
+
+        return points
+
     def __len__(self):
         return self.num_samples
 
@@ -242,9 +255,106 @@ class AirplaneSurfaceDataset(Dataset):
             random_rotation=self.random_rotation,
         )
 
+        pts_np = self.preprocess(pts_np)  # (N, 3)
+
         pts = torch.from_numpy(pts_np).transpose(0, 1)  # (3, N)
         labels = torch.from_numpy(labels_np)            # (N,)
         return pts, labels
+    
+import torch
+from torch.utils.data import Dataset
+
+# assuming you already have this somewhere:
+# from data.airplane import sample_airplane_surface
+
+class PrecomputedAirplaneSurfaceDataset(Dataset):
+    def __init__(
+        self,
+        num_samples=1000,
+        num_body_points=1024,
+        num_wing_points=512,
+        num_tailplane_points=256,
+        num_fin_points=256,
+        add_noise=True,
+        noise_sigma=0.005,
+        random_rotation=False,
+        seed: int | None = None,
+    ):
+        """
+        Precompute a fixed set of synthetic airplanes.
+
+        After construction, __getitem__ is deterministic and returns
+        the same point clouds every epoch.
+        """
+        super().__init__()
+        self.num_samples = num_samples
+        self.face_colors = np.array([
+            [1.0, 0.0, 0.0],  # 0: +X -> red
+            [0.0, 1.0, 0.0],  # 1: -X -> green
+            [0.0, 0.0, 1.0],  # 2: +Y -> blue
+            [1.0, 1.0, 0.0],  # 3: -Y -> yellow
+            [1.0, 0.0, 1.0],  # 4: +Z -> magenta
+            [0.0, 1.0, 1.0],  # 5: -Z -> cyan
+        ])
+        self.num_classes = 5
+
+        # optional: make generation reproducible
+        rng_state = None
+        if seed is not None:
+            rng_state = torch.random.get_rng_state()
+            torch.manual_seed(seed)
+
+        points_list = []
+        labels_list = []
+
+        for _ in range(num_samples):
+            pts_np, labels_np = _sample_airplane_surface(
+                num_body_points=num_body_points,
+                num_wing_points=num_wing_points,
+                num_tailplane_points=num_tailplane_points,
+                num_fin_points=num_fin_points,
+                add_noise=add_noise,
+                noise_sigma=noise_sigma,
+                random_rotation=random_rotation,
+            )
+            # pts_np: (N, 3), labels_np: (N,)
+
+            pts_np = self.preprocess(pts_np)  # (N, 3)
+
+            pts = torch.from_numpy(pts_np).transpose(0, 1)  # (3, N)
+            labels = torch.from_numpy(labels_np)            # (N,)
+
+            points_list.append(pts)
+            labels_list.append(labels)
+
+        # stack into big tensors for fast access
+        self.points = torch.stack(points_list, dim=0)   # (num_samples, 3, N)
+        self.labels = torch.stack(labels_list, dim=0)   # (num_samples, N)
+
+        # restore rng if we changed it
+        if rng_state is not None:
+            torch.random.set_rng_state(rng_state)
+
+    def preprocess(self, points):
+        # points: (3, N)
+
+        # 1. center
+        centroid = points.mean(axis=1, keepdims=True)
+        points = points - centroid
+
+        # 2. scale to unit sphere
+        scale = np.max(np.linalg.norm(points, axis=0))
+        points = points / scale
+
+        return points
+
+    def __len__(self):
+        return self.num_samples
+
+    def __getitem__(self, idx):
+        # Just slice the precomputed tensors
+        return self.points[idx], self.labels[idx]
+
     
     def view_sample(self, idx):
         # Get one sample
