@@ -262,10 +262,3 @@ segmentation_models/
 
 * you want state-of-the-art segmentation
 * you prefer dynamic graph neighborhoods
-
----
-
-If you'd like, I can also generate:
-
-* A combined architecture diagram
-* README sections for DGCNN, training instructions, environment setup, etc.
