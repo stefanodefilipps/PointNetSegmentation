@@ -1,1 +1,2 @@
 from .airplane_dataset import AirplaneSurfaceDataset
+from .shapenetparts import ShapeNetPartDataset

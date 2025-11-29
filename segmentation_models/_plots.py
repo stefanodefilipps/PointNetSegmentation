@@ -18,9 +18,13 @@ def plot_gt_vs_pred(model, device, dataset, idx=None):
     pts_np = pts.numpy().T          # (N, 3)
     labels_np = labels.numpy()
 
+    cmap = plt.get_cmap('tab10')  # has distinct colors
+    gt_colors = cmap(labels_np / labels_np.max())  # normalize labels into [0, 1]
+    pred_colors = cmap(preds / preds.max())
+
     # Map to colors
-    gt_colors = dataset.face_colors[labels_np]
-    pred_colors = dataset.face_colors[preds]
+    # gt_colors = dataset.face_colors[labels_np]
+    # pred_colors = dataset.face_colors[preds]
 
     # Shared limits
     max_range = (pts_np.max(axis=0) - pts_np.min(axis=0)).max()
