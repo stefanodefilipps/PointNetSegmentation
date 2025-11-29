@@ -16,7 +16,7 @@ val_dataset = ShapeNetPartDataset(
     split="test",
     num_points=2048,
     class_choice=["Airplane"],   # or None for all
-    normalize=False,
+    normalize=True,
 )
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -42,9 +42,11 @@ evaluate(
 
 print("Restored model from epoch", start_epoch, "with best val loss", best_val_loss)
 
-plot_gt_vs_pred(
-    model=model,
-    device=device,
-    dataset=val_dataset,
-    idx=0
-)  # Optional: visualize predictions before training
+for idx in range(5):
+
+    plot_gt_vs_pred(
+        model=model,
+        device=device,
+        dataset=val_dataset,
+        idx=idx
+    )  # Optional: visualize predictions before training

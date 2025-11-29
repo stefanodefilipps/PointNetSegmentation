@@ -20,8 +20,8 @@ def main():
         root=root,
         split="train",
         num_points=2048,
-        class_choice=["Chair"],   # or None for all
-        normalize=False,
+        class_choice=["Airplane"],   # or None for all
+        normalize=True,
     )
 
     val_dataset = ShapeNetPartDataset(
@@ -29,7 +29,7 @@ def main():
         split="test",
         num_points=2048,
         class_choice=["Airplane"],   # or None for all
-        normalize=False,
+        normalize=True,
     )
 
     train_dataset.view_sample(0)  # Optional: visualize a sample
@@ -62,7 +62,7 @@ def main():
         optimizer=optimizer,
         device=device,
         num_epochs=100,
-        checkpoint_path="checkpoints/best_model_pointnet2_chairs.pt",
+        checkpoint_path="checkpoints/best_model_pointnet2_airplanes.pt",
         es_min_delta=0.0,
         es_patience=50
     )
